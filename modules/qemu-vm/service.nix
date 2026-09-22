@@ -7,21 +7,16 @@ let
 
     ${pkgs.kmod}/bin/modprobe kvm 2>/dev/null || true
 
-    ${
-      if qemuArch == "x86_64" then
-        ''
-          if ${pkgs.gnugrep}/bin/grep -qw vmx /proc/cpuinfo; then
-            ${pkgs.kmod}/bin/modprobe kvm-intel
-          elif ${pkgs.gnugrep}/bin/grep -qw svm /proc/cpuinfo; then
-            ${pkgs.kmod}/bin/modprobe kvm-amd
-          else
-            echo "CPU does not expose Intel VMX or AMD SVM" >&2
-            exit 1
-          fi
-        ''
+    ${lib.optionalString (qemuArch == "x86_64") ''
+      if ${pkgs.gnugrep}/bin/grep -qw vmx /proc/cpuinfo; then
+        ${pkgs.kmod}/bin/modprobe kvm-intel
+      elif ${pkgs.gnugrep}/bin/grep -qw svm /proc/cpuinfo; then
+        ${pkgs.kmod}/bin/modprobe kvm-amd
       else
-        ""
-    }
+        echo "CPU does not expose Intel VMX or AMD SVM" >&2
+        exit 1
+      fi
+    ''}
 
     if [ ! -c /dev/kvm ]; then
       echo "KVM did not provide /dev/kvm" >&2
@@ -42,7 +37,6 @@ in
 
   systemd.services.qemu-kvm-modules = {
     description = "Load hardware-specific KVM modules for QEMU";
-    # Referencing the bare template creates qemu-vm@qemu-kvm-modules.
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;

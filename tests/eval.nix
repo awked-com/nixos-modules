@@ -89,10 +89,10 @@ let
         mode = "0700";
       };
     })
-    ({ pkgs, ... }: {
+    {
       # Only the executable location is needed to evaluate the lifecycle units.
       nixpkgs.overlays = [
-        (final: prev: { pinned-bind-sources = prev.writeShellScriptBin "pinned-bind-sources" "exit 0"; })
+        (_: prev: { pinned-bind-sources = prev.writeShellScriptBin "pinned-bind-sources" "exit 0"; })
       ];
       users.users.example = {
         isSystemUser = true;
@@ -101,7 +101,7 @@ let
       };
       users.groups.example.gid = 2002;
       containers.example.config.system.stateVersion = "25.11";
-    })
+    }
   ];
   secrets = evaluate [
     modules.sops-credential-restarts
@@ -138,42 +138,38 @@ let
             "settings:/run/secrets/template"
           ];
         };
+        systemd.services.disabled = {
+          enable = false;
+          serviceConfig.LoadCredential = [ "key:/run/secrets/example" ];
+        };
+        systemd.services.scalar.serviceConfig = {
+          ExecStart = "/bin/true";
+          LoadCredential = "key:/run/secrets/example";
+        };
         systemd.services.unrelated.serviceConfig.ExecStart = "/bin/true";
       };
     })
   ];
-  cache = evaluate [
-    modules.nix-ci-cache
-    ({ pkgs, ... }: {
-      services.nix-ci-cache = {
-        enable = true;
-        package = pkgs.writeShellApplication {
-          name = "nix-ci-worker";
-          text = "exit 0";
+  evaluateCache =
+    identityFile:
+    evaluate [
+      modules.nix-ci-cache
+      ({ pkgs, ... }: {
+        services.nix-ci-cache = {
+          enable = true;
+          package = pkgs.writeShellApplication {
+            name = "nix-ci-worker";
+            text = "exit 0";
+          };
+          repository = "ghcr.io/example/cache";
+          port = 9999;
+          inherit identityFile;
+          publicKey = "example:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
         };
-        repository = "ghcr.io/example/cache";
-        port = 9999;
-        identityFile = "/run/keys/cache";
-        publicKey = "example:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-      };
-    })
-  ];
-  invalidCache = evaluate [
-    modules.nix-ci-cache
-    ({ pkgs, ... }: {
-      services.nix-ci-cache = {
-        enable = true;
-        package = pkgs.writeShellApplication {
-          name = "nix-ci-worker";
-          text = "exit 0";
-        };
-        repository = "ghcr.io/example/cache";
-        port = 9999;
-        identityFile = "/nix/store/example/identity";
-        publicKey = "example:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
-      };
-    })
-  ];
+      })
+    ];
+  cache = evaluateCache "/run/keys/cache";
+  invalidCache = evaluateCache "/nix/store/example/identity";
 in
 {
   castLifecycle = require "Cast receiver lifecycle must coordinate both protocols and the display" (
@@ -216,7 +212,10 @@ in
             pinned.systemd.services."container@example".unitConfig.RequiresMountsFor
       );
   credentialRestarts = require "Only consumers of a credential path should restart when it changes" (
-    secrets.sops.secrets.example.restartUnits == [ "consumer.service" ]
+    secrets.sops.secrets.example.restartUnits == [
+      "consumer.service"
+      "scalar.service"
+    ]
     && secrets.sops.templates.example.restartUnits == [ "consumer.service" ]
     && secrets.sops.secrets.manual.restartUnits == [ "manual.service" ]
   );

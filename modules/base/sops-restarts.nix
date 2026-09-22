@@ -10,12 +10,13 @@ let
       in
       lib.optional (source != null) (builtins.head source)
     ) (lib.toList (service.serviceConfig.LoadCredential or [ ]));
+  serviceCredentials = lib.mapAttrs (_: credentialSources) (
+    lib.filterAttrs (_: service: service.enable) config.systemd.services
+  );
   consumers =
     path:
     lib.mapAttrsToList (name: _: "${name}.service") (
-      lib.filterAttrs (
-        _: service: service.enable && builtins.elem path (credentialSources service)
-      ) config.systemd.services
+      lib.filterAttrs (_: sources: builtins.elem path sources) serviceCredentials
     );
   restartConsumers = { config, ... }: {
     # LoadCredential snapshots change only on restart.

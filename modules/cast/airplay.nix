@@ -9,6 +9,10 @@ let
   cfg = config.services.cast;
   media = import ./media.nix { inherit config lib pkgs; };
   hardening = import ./hardening.nix;
+  portRange = {
+    from = cfg.airplay.port;
+    to = cfg.airplay.port + 2;
+  };
 in
 lib.mkIf cfg.enable {
   services.avahi = {
@@ -23,18 +27,8 @@ lib.mkIf cfg.enable {
 
   networking.firewall.interfaces = lib.genAttrs cfg.airplay.interfaces (_: {
     allowedUDPPorts = [ 5353 ];
-    allowedTCPPortRanges = [
-      {
-        from = cfg.airplay.port;
-        to = cfg.airplay.port + 2;
-      }
-    ];
-    allowedUDPPortRanges = [
-      {
-        from = cfg.airplay.port;
-        to = cfg.airplay.port + 2;
-      }
-    ];
+    allowedTCPPortRanges = [ portRange ];
+    allowedUDPPortRanges = [ portRange ];
   });
 
   systemd.services.uxplay = rec {
@@ -121,5 +115,4 @@ lib.mkIf cfg.enable {
       RuntimeDirectoryMode = "0700";
     };
   };
-
 }

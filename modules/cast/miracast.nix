@@ -116,38 +116,38 @@ lib.mkIf cfg.enable {
         "${waitForMiraclecast}/bin/wait-for-miraclecast"
       ]
       ++ lib.optional cfg.audio.enable "${media.waitForPipeWire}/bin/wait-for-pipewire";
-      ExecStart =
-        "${pkgs.coreutils}/bin/stdbuf -oL "
-        + lib.escapeShellArgs (
-          [
-            "${pkgs.miraclecast}/bin/miracle-sinkctl"
-            "--res"
-            cfg.miraclecast.supportedResolutions
-            "--video-decoder"
-            cfg.graphics.videoDecoder
-          ]
-          ++ lib.optionals (cfg.graphics.videoCaps != null) [
-            "--video-caps"
-            cfg.graphics.videoCaps
-          ]
-          ++ (
-            if cfg.audio.enable then
-              [
-                "--audio-sink"
-                "pipewiresink"
-              ]
-            else
-              [ "--no-audio" ]
-          )
-          ++ [
-            "--video-sink"
-            media.videoSink
-            "--display-power-cmd"
-            "${media.displayPower}/bin/display-power"
-            "bind"
-            p2pInterface
-          ]
-        );
+      ExecStart = lib.escapeShellArgs (
+        [
+          "${pkgs.coreutils}/bin/stdbuf"
+          "-oL"
+          "${pkgs.miraclecast}/bin/miracle-sinkctl"
+          "--res"
+          cfg.miraclecast.supportedResolutions
+          "--video-decoder"
+          cfg.graphics.videoDecoder
+        ]
+        ++ lib.optionals (cfg.graphics.videoCaps != null) [
+          "--video-caps"
+          cfg.graphics.videoCaps
+        ]
+        ++ (
+          if cfg.audio.enable then
+            [
+              "--audio-sink"
+              "pipewiresink"
+            ]
+          else
+            [ "--no-audio" ]
+        )
+        ++ [
+          "--video-sink"
+          media.videoSink
+          "--display-power-cmd"
+          "${media.displayPower}/bin/display-power"
+          "bind"
+          p2pInterface
+        ]
+      );
       ExecStopPost = "${media.displayPower}/bin/display-power release miracle";
       ReadWritePaths = [
         "/run/display"
@@ -161,5 +161,4 @@ lib.mkIf cfg.enable {
       TimeoutStopSec = "10s";
     };
   };
-
 }

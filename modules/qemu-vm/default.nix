@@ -36,7 +36,6 @@ let
   qmpSocket = "${runtimePath}/qmp.sock";
   serialSocket = "${runtimePath}/console.sock";
   serviceUser = "vm-${name}";
-  serviceUid = uid;
   serviceGroup = "kvm";
   qemuPackage = pkgs.qemu_kvm.override {
     nixosTestRunner = true;
@@ -227,8 +226,8 @@ in
   };
 
   users.users.${serviceUser} = {
+    inherit uid;
     isSystemUser = true;
     group = serviceGroup;
-    uid = serviceUid;
   };
 }

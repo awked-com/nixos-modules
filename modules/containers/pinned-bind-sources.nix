@@ -17,8 +17,8 @@ let
     in
     {
       inherit mountPoint;
+      inherit (source) path;
       target = toString index;
-      path = source.path;
       create = source.create or false;
       uid = if source ? user then config.users.users.${source.user}.uid else null;
       gid = if source ? group then config.users.groups.${source.group}.gid else null;
