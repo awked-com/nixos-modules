@@ -1,7 +1,6 @@
 # NixOS modules
 
-Reusable NixOS services with caller-supplied configuration. This flake contains
-no host inventory, credentials, secret files, or deployment commands.
+Reusable NixOS services with caller-supplied configuration.
 
 | Export | Purpose |
 | --- | --- |
@@ -13,8 +12,7 @@ no host inventory, credentials, secret files, or deployment commands.
 | `lib.pinnedBindSources { ... }` | Pinned directory bind mounts for NixOS containers |
 | `lib.networkingValidation` | MAC address, port-list and uniqueness validation for network declarations |
 
-Modules are opt-in. There is no default module enabling unrelated services.
-Linux x86-64 and AArch64 are evaluated against the pinned Nixpkgs revision.
+Checks evaluate Linux x86-64 and AArch64 against the pinned Nixpkgs revision.
 
 ## Inputs and packages
 
@@ -25,10 +23,9 @@ inputs.nixos-modules.url = "github:awked-com/nixos-modules";
 inputs.nixos-modules.inputs.nixpkgs.follows = "nixpkgs";
 ```
 
-The cast stack requires the patched UxPlay and MiracleCast packages from
-[`nixpkgs-patches`](https://github.com/awked-com/nixpkgs-patches). Its display
-lifecycle and Wi-Fi control options depend on those patches. The same overlay
-provides the AmneziaWG fixes used with this module. Supply it from the consumer:
+Cast requires the patched UxPlay and MiracleCast packages from
+[`nixpkgs-patches`](https://github.com/awked-com/nixpkgs-patches) for display
+lifecycle and Wi-Fi control. This overlay also supplies the AmneziaWG fixes:
 
 ```nix
 inputs.nixpkgs-patches.url = "github:awked-com/nixpkgs-patches";
@@ -40,8 +37,8 @@ nixpkgs.overlays = [ inputs.nixpkgs-patches.overlays.default ];
 
 The cache and pinned bind helpers come from
 [`packages`](https://github.com/awked-com/packages). Add its overlay with the same
-Nixpkgs `follows` relationship when using those modules, or supply equivalent
-packages. The cache module also accepts `services.nix-ci-cache.package`.
+Nixpkgs `follows` relationship, or supply equivalent packages. The cache module
+also accepts `services.nix-ci-cache.package`.
 
 ## Cast receiver
 
@@ -57,13 +54,11 @@ services.cast = {
 users.users.cast.uid = 2000;
 ```
 
-Choose a free, stable UID. Wi-Fi must support P2P with wpa_supplicant, and the
-display must support the configured DRM/KMS pipeline. Hardware decoding, display
-connector, framebuffer and plane selection are configurable. The module owns
-the local display session and disables its first virtual-terminal getty.
-It uses systemd-networkd and nftables rules; configure your network
-interfaces and firewall backend accordingly. AirPlay is exposed on the named
-interfaces; Miracast uses isolated P2P interfaces.
+Choose a free, stable UID. Wi-Fi must support P2P with wpa_supplicant; the display
+must support the configured DRM/KMS pipeline. The module owns the local display
+session and disables its first virtual-terminal getty. Configure interfaces with
+systemd-networkd and use the nftables firewall backend. AirPlay is exposed on
+the named interfaces; Miracast uses isolated P2P interfaces.
 
 ## AmneziaWG
 
@@ -149,10 +144,9 @@ services.nix-ci-cache = {
 };
 ```
 
-The caller installs the age identity at runtime, orders its provider before
-`nix-ci-cache.service`, and restarts the service when it changes. No secret
-provider is required by the cache module. The SOPS restart helper can handle
-credential changes when using SOPS.
+Install the age identity at runtime, order its provider before
+`nix-ci-cache.service`, and restart the service when it changes. The SOPS restart
+helper handles credential changes when using SOPS.
 
 ## Checks
 
@@ -160,11 +154,10 @@ credential changes when using SOPS.
 nix eval --json .#lib.evaluationTests.x86_64-linux
 nix eval --json .#lib.evaluationTests.aarch64-linux
 nix flake check
+nix fmt
 ```
 
-Evaluation checks exercise enabled service configuration, credential wiring,
-VM identity/device access, container mount inventory and SOPS restart selection.
-They use synthetic host values. The helper executables are substituted with
-evaluation fixtures where only their paths are needed. These checks do not run
-privileged mounts, KVM, network tunnels, AirPlay, Miracast or physical displays;
-those require Linux and appropriate hardware.
+Checks cover service configuration, credential wiring, VM identity/device
+access, container mount inventory and SOPS restart selection with synthetic
+configuration and helper executables. Runtime testing of mounts, KVM, network
+tunnels, AirPlay, Miracast and displays requires Linux and appropriate hardware.

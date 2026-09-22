@@ -53,7 +53,7 @@
       );
 
       formatter = nixpkgs.lib.genAttrs (systems ++ [ "aarch64-darwin" ]) (
-        system: nixpkgs.legacyPackages.${system}.nixfmt
+        system: nixpkgs.legacyPackages.${system}.nixfmt-tree
       );
     };
 }
