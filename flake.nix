@@ -28,6 +28,7 @@
       };
 
       lib = {
+        networkingValidation = import ./modules/networking/validation.nix;
         qemuVM = import ./modules/qemu-vm;
         pinnedBindSources = import ./modules/containers/pinned-bind-sources.nix;
         evaluationTests = forAllSystems evaluate;

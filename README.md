@@ -11,6 +11,7 @@ no host inventory, credentials, secret files, or deployment commands.
 | `nixosModules.nix-ci-cache` | Loopback Nix cache serving encrypted objects with `nix-ci-worker` |
 | `lib.qemuVM { ... }` | QEMU/KVM service with explicit UID, disk paths, TAP interfaces and serial console |
 | `lib.pinnedBindSources { ... }` | Pinned directory bind mounts for NixOS containers |
+| `lib.networkingValidation` | MAC address, port-list and uniqueness validation for network declarations |
 
 Modules are opt-in. There is no default module enabling unrelated services.
 Linux x86-64 and AArch64 are evaluated against the pinned Nixpkgs revision.
