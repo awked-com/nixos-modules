@@ -1,18 +1,14 @@
 # NixOS modules
 
-Reusable NixOS services with caller-supplied configuration.
-
 | Export | Purpose |
 | --- | --- |
 | `nixosModules.cast` | AirPlay and Miracast receiver, direct KMS display ownership, audio and network isolation |
-| `nixosModules.amneziawg-go` | Hardened userspace AmneziaWG tunnels with credential files and endpoint refresh |
+| `nixosModules.amneziawg-go` | Userspace AmneziaWG tunnels with credential files and endpoint refresh |
 | `nixosModules.sops-credential-restarts` | Restart services consuming changed SOPS secrets or templates through `LoadCredential` |
 | `nixosModules.nix-ci-cache` | Loopback Nix cache serving encrypted objects with `nix-ci-worker` |
 | `lib.qemuVM { ... }` | QEMU/KVM service with explicit UID, disk paths, TAP interfaces and serial console |
 | `lib.pinnedBindSources { ... }` | Pinned directory bind mounts for NixOS containers |
 | `lib.networkingValidation` | MAC address, port-list and uniqueness validation for network declarations |
-
-Checks evaluate Linux x86-64 and AArch64 against the pinned Nixpkgs revision.
 
 ## Inputs and packages
 
@@ -157,7 +153,6 @@ nix flake check
 nix fmt
 ```
 
-Checks cover service configuration, credential wiring, VM identity/device
-access, container mount inventory and SOPS restart selection with synthetic
-configuration and helper executables. Runtime testing of mounts, KVM, network
-tunnels, AirPlay, Miracast and displays requires Linux and appropriate hardware.
+Checks evaluate configuration against the pinned Nixpkgs revision. Testing
+mounts, KVM, network tunnels, AirPlay, Miracast and displays requires Linux
+and appropriate hardware.
