@@ -23,7 +23,7 @@ in
     };
     repository = lib.mkOption {
       type = lib.types.str;
-      description = "GHCR package containing the nixos-cache-latest tag, for example ghcr.io/example/cache.";
+      description = "GHCR package containing the encrypted cache, for example ghcr.io/example/cache.";
     };
     port = lib.mkOption {
       type = lib.types.port;
